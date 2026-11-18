@@ -1,0 +1,275 @@
+# PROGRESS
+
+## Meta
+- rust: 1.99.1
+- bevy: =0.20.1
+- bevy_egui: =0.43.1
+- serde: =1.0.229 (derive)
+- toml: =1.2.1
+- dirs: =7.0.0
+- os: Manjaro Linux, Wayland+XWayland, Vulkan radv
+- agent: lead
+
+## Tasks
+- [x] Task_01 Scaffold, states, camera
+- [x] Task_02 Settings struct + settings.toml
+- [x] Task_03 Task registry + template
+- [x] Task_04 Main menu + theme
+- [x] Task_05 Settings screen + video
+- [x] Task_06 Arena + props environment + temp debug
+- [x] Task_07 Mouse look, FOV, cursor, Shot
+- [x] Task_08 Crosshair
+- [x] Task_09 Targets + hitscan
+- [x] Task_10 Sandbox task
+- [x] Task_11 Round flow + pause
+- [x] Task_12 Scoring + HUD + results
+- [x] Task_13 Storage scores.toml
+- [x] Task_14 Pistol viewmodel (download + convert)
+- [x] Task_15 ADDING_A_TASK.md + template check
+- [x] Task_16 Gridshot
+- [x] Task_17 Sixshot
+- [x] Task_18 Spidershot
+- [x] Task_19 Tracking Follow
+- [x] Task_20 Tracking Shoot
+- [x] Task_21 Flick Reaction
+
+## Files (path | purpose)
+- Cargo.toml | package, pinned deps, build profiles
+- .gitignore | /target
+- src/main.rs | App, DefaultPlugins window 1280x720 "AimTrainer", 3 plugins
+- src/core/mod.rs | CorePlugin: init_state + camera startup
+- src/core/state.rs | AppState (8 states, Default Menu)
+- src/core/camera.rs | PLAYER_POS, PlayerCamera, spawn_player_camera
+- src/props/mod.rs | PropsPlugin (empty)
+- src/tasks/mod.rs | TasksPlugin (empty)
+- src/core/config.rs | Settings resource, load/save, 0.5s autosave
+- src/core/task_api.rs | ScoringMode, TaskInfo, TaskRegistry, SelectedTask, run conditions
+- src/tasks/mod.rs | register_tasks! macro + TasksPlugin (empty registry)
+- src/tasks/_template/mod.rs | task module template (compiled, not registered)
+- src/core/ui/mod.rs | UiPlugin: EguiPlugin + theme
+- src/core/ui/menu.rs | dashboard home screen (sidebar + stats + task cards)
+- src/core/ui/settings.rs | settings_panel + Settings screen (Settings state)
+- src/core/video.rs | vsync/window mode apply + fps cap limiter
+- src/core/round.rs | RoundDuration, RoundTimer, 3-2-1 countdown, round tick
+- src/core/score.rs | RoundScore, mode resolution, click/tracking scoring
+- src/core/hud.rs | native HUD (time / score / accuracy)
+- src/core/storage.rs | Scores/LastOutcome, scores.toml load/save, best tracking
+- src/core/ui/task_select.rs | task list screen
+- src/core/ui/time_select.rs | duration presets screen
+- src/core/ui/pause.rs | Esc pause/resume + pause window
+- src/core/ui/results.rs | dashboard-style results screen
+- src/core/ui/widgets.rs | shared dashboard design system (cards, chips, buttons, bars)
+- src/props/environment.rs | RoomMaterials + room shell spawn/recolor
+- src/core/arena.rs | ArenaEntity, ArenaPlugin (spawn/cleanup)
+- src/core/debug.rs | DELETED in Task_11
+- src/core/input.rs | PlayerLook, CursorFree, Shot, mouse look, FOV, cursor lock
+- src/core/crosshair.rs | native Bevy UI crosshair (4 styles, outline, rebuild)
+- src/core/hit.rs | Target/TargetShape, TargetHit/Miss/TargetExpired, AimingAt, hitscan
+- src/props/targets.rs | TargetMaterial + spawn_sphere/spawn_box builders
+- src/tasks/sandbox/mod.rs | sandbox test task (7 targets, debug overlay, F1 panel)
+- docs/ADDING_A_TASK.md | self-contained task authoring guide
+- assets/models/pistol.glb | converted Quaternius Pistol_1 viewmodel
+- assets/LICENSES.md | asset license (CC0)
+- src/props/gun.rs | pistol viewmodel spawn/sync
+- src/tasks/gridshot/mod.rs | Gridshot click task
+- src/tasks/sixshot/mod.rs | Sixshot click task
+- src/tasks/spidershot/mod.rs | Spidershot click task
+- src/tasks/tracking_follow/mod.rs | Tracking Follow task
+- src/tasks/tracking_shoot/mod.rs | Tracking Shoot task
+- src/tasks/flick/mod.rs | Flick / Reaction task
+
+## Interfaces (exact signatures)
+- enum AppState { Menu, Settings, TaskSelect, TimeSelect, Countdown, Playing, Paused, Results } (States, Default=Menu)
+- pub const PLAYER_POS: Vec3 = Vec3::new(0.0, 1.7, 0.0)
+- #[derive(Component)] pub struct PlayerCamera
+- pub fn spawn_player_camera(mut commands: Commands)
+- pub struct CorePlugin; pub struct PropsPlugin; pub struct TasksPlugin
+- Settings { pub sens: f32, pub fov_h: f32, pub crosshair: CrosshairCfg, pub colors: ColorsCfg, pub video: VideoCfg, pub show_gun: bool } (Resource, Clone, Debug, PartialEq, Serialize, Deserialize, serde(default))
+- CrosshairCfg { style: CrosshairStyle, size: f32, thickness: f32, gap: f32, color: [u8;3], outline: bool }
+- CrosshairStyle { Dot, Cross, Circle, T }
+- ColorsCfg { floor, ceiling, walls, target, background_accent: [u8;3] }
+- VideoCfg { vsync: bool, fps_cap: u32, window_mode: WindowMode }
+- WindowMode { Windowed, Borderless, Fullscreen }
+- pub fn load_settings(mut commands: Commands)
+- pub fn save_settings(settings: &Settings)
+- pub fn autosave_settings(settings: Res<Settings>, time: Res<Time>, mut pending: Local<Option<Timer>>)
+- enum ScoringMode { Click, Tracking }
+- struct TaskInfo { pub id: &'static str, pub name: &'static str, pub description: &'static str, pub scoring: ScoringMode } (Clone, Copy, Debug)
+- struct TaskRegistry(pub Vec<TaskInfo>) (Resource, Default)
+- struct SelectedTask(pub &'static str) (Resource, Default = "")
+- pub fn task_playing(id: &'static str) -> impl FnMut(Res<State<AppState>>, Res<SelectedTask>) -> bool + Clone
+- pub fn task_selected(id: &'static str) -> impl FnMut(Res<SelectedTask>) -> bool + Clone
+- macro_rules! register_tasks { ($($task:ident),* $(,)?) } -> mods + TasksPlugin
+- _template: pub const INFO: TaskInfo (id "template", Click); pub fn plugin() -> impl Plugin
+- pub struct UiPlugin (adds EguiPlugin::default + EguiPrimaryContextPass systems)
+- pub fn menu_ui(mut contexts: EguiContexts, registry: Res<TaskRegistry>, mut selected: ResMut<SelectedTask>, scores: Res<Scores>, accent: Res<UiAccent>, mut next_state: ResMut<NextState<AppState>>, mut exit: MessageWriter<AppExit>)
+- pub fn settings_screen(mut contexts: EguiContexts, mut settings: ResMut<Settings>, mut next_state: ResMut<NextState<AppState>>)
+- pub fn settings_panel(ui: &mut egui::Ui, settings: &mut Settings)
+- pub fn apply_video_settings(settings: Res<Settings>, mut windows: Query<&mut Window, With<PrimaryWindow>>, mut last_frame: Local<Option<Instant>>)
+- struct RoomMaterials { pub floor/ceiling/walls: Handle<StandardMaterial> } (Resource)
+- pub fn create_room_materials(mut commands: Commands, mut materials: ResMut<Assets<StandardMaterial>>, settings: Option<Res<Settings>>)
+- pub fn update_room_materials(settings: Res<Settings>, room: Option<Res<RoomMaterials>>, mut materials: ResMut<Assets<StandardMaterial>>)
+- pub fn spawn_room(commands: &mut Commands, meshes: &mut Assets<Mesh>, materials: &RoomMaterials)
+- pub struct ArenaEntity (Component)
+- pub struct ArenaPlugin; pub struct DebugPlugin
+- pub const BASE_DEG_PER_COUNT: f32 = 0.022
+- pub struct PlayerLook { pub yaw: f32, pub pitch: f32 } (Resource, Default)
+- pub struct CursorFree(pub bool) (Resource, Default)
+- pub struct Shot (Message)
+- pub struct InputPlugin
+- pub struct CrosshairRoot (Component)
+- pub struct CrosshairPlugin
+- pub fn spawn_crosshair_ui(commands: &mut Commands, cfg: &CrosshairCfg)
+- pub enum TargetShape { Sphere { radius: f32 }, Box { half_extents: Vec3 } }
+- pub struct Target { pub shape: TargetShape, pub lifetime: Option<f32> } (Component)
+- pub struct Expired (Component)
+- pub struct TargetHit { pub entity: Entity }; pub struct Miss; pub struct TargetExpired { pub entity: Entity } (Message)
+- pub struct AimingAt(pub Option<Entity>) (Resource, Default)
+- pub struct HitPlugin
+- pub struct TargetMaterial(pub Handle<StandardMaterial>) (Resource)
+- pub fn spawn_sphere(commands: &mut Commands, meshes: &mut Assets<Mesh>, material: &TargetMaterial, pos: Vec3, radius: f32, lifetime: Option<f32>) -> Entity
+- pub fn spawn_box(commands: &mut Commands, meshes: &mut Assets<Mesh>, material: &TargetMaterial, pos: Vec3, half_extents: Vec3, lifetime: Option<f32>) -> Entity
+- sandbox: pub const INFO: TaskInfo (id "sandbox", name "Sandbox", Click); pub fn plugin() -> impl Plugin
+- pub struct RoundDuration(pub u32) (Resource, Default 60)
+- pub struct RoundTimer { pub duration: f32, pub remaining: f32 } (Resource, Default)
+- pub struct RoundPlugin
+- pub fn task_select_ui(mut contexts: EguiContexts, registry: Res<TaskRegistry>, mut selected: ResMut<SelectedTask>, mut next_state: ResMut<NextState<AppState>>)
+- pub fn time_select_ui(mut contexts: EguiContexts, mut duration: ResMut<RoundDuration>, mut next_state: ResMut<NextState<AppState>>)
+- pub fn pause_ui(mut contexts: EguiContexts, mut next_state: ResMut<NextState<AppState>>)
+- pub fn esc_pause(keys: Res<ButtonInput<KeyCode>>, mut next_state: ResMut<NextState<AppState>>)
+- pub fn esc_resume(keys: Res<ButtonInput<KeyCode>>, mut next_state: ResMut<NextState<AppState>>)
+- pub fn results_ui(mut contexts: EguiContexts, data: ResultsData, accent: Res<UiAccent>, mut next_state: ResMut<NextState<AppState>>)
+- pub struct ResultsData<'w> (SystemParam: score, timer, registry, selected, scores, last)
+- pub struct UiAccent(pub egui::Color32) (Resource)
+- ui::widgets: page(), card(), tile(), small_label(), muted(), big_value(), chip(), primary_button(), ghost_button(), bar_chart(), thousands()
+- pub fn page_size(ctx: &egui::Context, window: &Window) -> egui::Vec2
+- pub struct RoundScore { pub points: i32, pub hits: u32, pub misses: u32, pub tracking_ms: f64 } (Resource, Default)
+- pub fn scoring_mode(registry: &TaskRegistry, selected: &SelectedTask) -> ScoringMode
+- pub fn click_accuracy(score: &RoundScore) -> f32
+- pub fn format_time(seconds: u32) -> String
+- pub struct ScorePlugin; pub struct HudPlugin
+- struct RoundRecord { pub unix_secs: u64, pub duration: u32, pub score: i32, pub hits: u32, pub misses: u32, pub tracking_ms: u64 }
+- struct BestRecord { pub score: i32, pub unix_secs: u64 }
+- struct TaskScores { pub recent: Vec<RoundRecord>, pub best: BTreeMap<String, BestRecord> }
+- pub struct Scores { pub tasks: BTreeMap<String, TaskScores> } (Resource, Serialize/Deserialize)
+- pub struct LastOutcome { pub new_best: bool, pub best: i32 } (Resource, Default)
+- pub fn save_scores(scores: &Scores)
+- pub struct StoragePlugin
+- pub const GUN_OFFSET: Vec3 = Vec3::new(0.20, -0.22, -0.45)
+- pub const GUN_SCALE: f32 = 0.25
+- pub const GUN_ROT: Quat = Quat::from_xyzw(0.0, FRAC_1_SQRT_2, 0.0, FRAC_1_SQRT_2)  // +90 deg Y
+- pub struct GunPlugin
+- gridshot: pub const INFO: TaskInfo (id "gridshot", name "Gridshot", Click); pub fn plugin() -> impl Plugin
+- sixshot: pub const INFO: TaskInfo (id "sixshot", name "Sixshot", Click); pub fn plugin() -> impl Plugin
+- spidershot: pub const INFO: TaskInfo (id "spidershot", name "Spidershot", Click); pub fn plugin() -> impl Plugin
+- tracking_follow: pub const INFO: TaskInfo (id "tracking_follow", name "Tracking: Follow", Tracking); pub fn plugin() -> impl Plugin
+- tracking_shoot: pub const INFO: TaskInfo (id "tracking_shoot", name "Tracking: Shoot", Click); pub fn plugin() -> impl Plugin
+- flick: pub const INFO: TaskInfo (id "flick", name "Flick / Reaction", Click); pub fn plugin() -> impl Plugin
+- docs/ADDING_A_TASK.md | target files guide (layout, INFO/ScoringMode, API signatures, lifecycle, arena coords, rules, worked example, checklist)
+- tasks/mod.rs: register_tasks!(sandbox);
+
+## Decisions
+- bevy 0.20.1, default-features=false; features: std, async_executor, multi_threaded, bevy_log, bevy_state, reflect_auto_register, bevy_window, bevy_winit, x11, wayland, bevy_asset, bevy_render, bevy_core_pipeline, bevy_pbr, bevy_gltf, bevy_text, default_font, png, hdr, ktx2, tonemapping_luts, zstd_rust, bevy_mikktspace (bevy 0.20 split features; input/diagnostics non-optional)
+- Camera spawned once at Startup, default -Z forward
+- 2 dead_code allow: AppState unused variants
+- settings path: dirs::config_dir()/aim_trainer/settings.toml
+- corrupt/unreadable file -> rename settings.toml.bak, defaults written
+- autosave debounce 0.5s via Local<Option<Timer>>; enum named WindowMode per spec
+- verified: creates defaults, corrupt -> .bak + defaults
+- tasks/mod.rs calls register_tasks!() empty; _template declared #[allow(dead_code)], not registered
+- task_api has #![allow(dead_code)] for future-task API
+- bevy_egui: UI systems in EguiPrimaryContextPass; egui ctx_mut() -> Result (handled, no panic)
+- menu_ui run_if(in_state(AppState::Menu)); Play->TaskSelect, Settings->Settings, Quit->AppExit::Success
+- theme: ClearColor/panel = dark tint of background_accent (accent*0.10 + base), accent for selection/hover/active, light text; re-applied only when Settings change (Local<bool>)
+- theme system in EguiPrimaryContextPass chained before menu_ui
+- verified via X11 run + XTest: menu visible; Play/Settings hide menu (state change); Quit exits code 0
+- settings screen edits a draft copy; applied only if != Settings (stops ResMut deref marking changed every frame, which reset autosave debounce forever)
+- video: vsync -> PresentMode::AutoVsync/AutoNoVsync; window_mode -> Windowed/BorderlessFullscreen/Fullscreen(Current, VideoModeSelection::Current)
+- fps cap: Instant-based sleep limiter in Update, 0 = off
+- verified: sens slider saved (10.0), Reset restores defaults, vsync saved, Borderless applies live (window 1600x900 fullscreen), restart keeps Borderless, Back->Menu
+- room interior x -10..10, y 0..6, z -30..5 (Cuboid slabs); shared mesh handles reused
+- Bevy 0.20 AmbientLight is a per-camera Component (requires Camera), not a Resource: attached to PlayerCamera on Countdown, removed on cleanup; room+DirectionalLight carry ArenaEntity
+- DirectionalLight shadow_maps_enabled=false, AMBIENT_DAYLIGHT lux
+- Arena spawn OnEnter(Countdown); cleanup OnEnter(Results)/OnEnter(Menu)
+- debug: F2 Menu->Countdown, OnEnter(Countdown)->Playing, Esc Playing->Menu
+- not game-tested per task; user to verify F2/Esc
+- look: MouseMotion raw deltas; yaw -= dx*sens*0.022, pitch -= dy*sens*0.022 clamped +-89; rotation Quat::from_euler(YXZ, yaw, pitch, 0); position fixed at PLAYER_POS
+- FOV: vertical = 2*atan(tan(h_fov/2)/aspect); recomputed when fov_h or aspect changes
+- Bevy 0.20: CursorOptions is a separate Component (required by Window); queried With<PrimaryWindow>; Locked+hidden in Countdown/Playing, free otherwise
+- Shot sent on left just_pressed in Playing when !CursorFree
+- smoke-tested (X11): F2 -> room visible, Esc -> menu, no errors
+- Cargo.toml: added bevy feature "bevy_ui_render" (implies bevy_ui/bevy_text/bevy_sprite); needed for native UI nodes (outside Task_08 file list, required by task)
+- crosshair: full-screen centered Node anchor (0x0) + absolutely positioned children; Val::Px sizes; BackgroundColor/BorderColor; Outline 1px BLACK
+- Bevy 0.20: BorderRadius is a Node field (not a Component)
+- Circle: size x size node, border thickness, border_radius MAX
+- spawn OnEnter(Countdown); despawn OnEnter(Results)/Menu; rebuild only if root exists and Settings changed
+- verified visually (X11): all 4 styles centered, correct shapes, green + black outline
+- hitscan: ray origin PlayerCamera GlobalTransform, dir camera.forward(); analytic ray-sphere + ray-AABB (slab), nearest sets AimingAt
+- Shot -> TargetHit(entity) if AimingAt Some else Miss; systems chained expire->aim->shots in Playing only
+- lifetime ticks in Playing; at <=0 insert Expired + TargetExpired once; never despawn
+- target material shared, recolored on Settings change
+- hit.rs/targets.rs have #![allow(dead_code)] until task modules consume them (Task_10)
+- sandbox setup: 3 spheres r .15/.3/.5 z -8/-14/-20, 2 boxes half .3 z -10/-18, oscillator r .3 z -12 (x = sin(t*2)*4), lifetime sphere r .3 z -15 (3 s); x/y spread so all visible (z per spec)
+- sandbox uses Task APIs only; SelectedTask defaults to "sandbox" at Startup while no task select screen exists (remove when TaskSelect lands)
+- hit -> random x -6..6, y 0.8..4, same z (xorshift RNG); expired -> lifetime 3 s, random reposition, remove Expired
+- overlay: FPS (FrameTimeDiagnosticsPlugin), sens, fov_h, last event (Hit/Miss/Expired); F1 toggles settings_panel window, frees/grabs cursor and sets CursorFree
+- cleanup on Results/Menu despawns SandboxEntity, closes panel
+- verified: 7 targets visible, shot -> Hit + target moved, auto Expired visible, F1 opens settings panel
+- debug.rs deleted (no F2 shortcut); real flow Menu > TaskSelect > TimeSelect > Countdown(3s) > Playing > Results > Menu
+- RoundTimer set OnEnter(Countdown) from RoundDuration; ticks only in Playing; 0 -> Results
+- Pause = AppState::Paused: task_playing systems and timer stop automatically; Esc toggles; Paused->Playing does not re-enter Countdown so nothing respawns; CursorFree/cursor handled by input state sync
+- Results placeholder "Round over" + Back to Menu
+- verified end-to-end (X11, 30 s): countdown 3, playing, pause/resume (targets kept), pause/quit discards to menu, 30 s -> Results -> Menu
+- scoring: mode looked up from TaskRegistry by SelectedTask id (fallback Click); Click +10 hit / -3 Miss+TargetExpired; Tracking AimingAt -> tracking_ms += delta*1000 (f64), points = floor(ms)
+- HUD native UI root flex SpaceBetween: time mm:ss / score / accuracy (Click %) or on-target ms (Tracking); spawned Countdown, despawned Results/Menu
+- results shows score/hits/misses/accuracy for Click, time on target + % of round for Tracking
+- verified HUD (00:30 / 0 / 0%) and Results after 30 s: 1 shot + 9 auto-expiries -> Misses 10, Score 0 (clamped), Accuracy 0.0%
+- scores.toml: dirs::config_dir()/aim_trainer/scores.toml; Scores { tasks: BTreeMap<id, TaskScores{ recent (max 15), best: BTreeMap<duration_str, BestRecord> }> }
+- record only OnEnter(Results) (Quit path never reaches Results); score stored clamped max(0); best updated only if strictly higher; single write via toml::to_string_pretty
+- missing file -> empty; parse error -> scores.toml.bak + empty; no unwraps on I/O
+- LastOutcome drives NEW BEST badge; results shows best for task+duration and last 15 rounds (newest first)
+- verified 2 rounds: 162 then 297 recorded, best 297 + NEW BEST, recent lists both; corrupt file -> .bak and app keeps running
+- Task_15 was done before Task_14 by user request; both now complete
+- template check: copied _template -> _verify, registered `register_tasks!(sandbox, _verify)`, cargo check passed; removed folder+line, cargo check/clippy passed again
+- gun asset: downloaded ultimate_gun_pack_by_quaternius.zip (opengameart) to /tmp; chose OBJ/Pistol_1.obj (Glock-style; 553 quads, lowest among pistol-looking); converted headless with Blender to assets/models/pistol.glb (53292 bytes, 1040 tris, 5 materials, no textures -> within budget)
+- Bevy 0.20 spawns glTF scenes via WorldAssetRoot + GltfAssetLabel::Scene(0) (SceneRoot removed); gun is ChildOf(PlayerCamera), local transform GUN_OFFSET/GUN_ROT/GUN_SCALE, barrel +X rotated to -Z
+- spawn OnEnter(Countdown) if show_gun; live sync on Settings change including Paused; despawn Results/Menu; missing file warns once and skips
+- not run per task: user must verify gun visibility/orientation and report for GUN_* tuning
+- gridshot: 3x3 cells at z -12, spacing 1.2, centered (0, 1.7); exactly 3 sphere targets r 0.3; hit -> despawn + spawn on random free cell (excluding other 2 and the just-vacated cell); no lifetime
+- gridshot uses own GridshotEntity marker + GridCell(usize) + xorshift GridshotRng; cleanup on Results/Menu
+- STANDING VISUAL RULE (user request): a target never respawns on the spawn point it just vacated; that point can only be reused after another spawn happened elsewhere. Implement in every level (hit and expiry); docs/ADDING_A_TASK.md has the snippet. Applied to gridshot (exclude vacated cell) and sandbox (>=1 m from old position)
+- Results screen has Repeat (same SelectedTask + RoundDuration -> Countdown) and Back to Menu; applies to every level. Current round is still recorded before results; Repeat starts a fresh round
+- UI redesign (user request): dark dashboard look applied to Home, Settings, Results; sidebar (Home/Play/Settings/Quit + status), welcome header, personal-best card, recent-round bar chart, task cards with per-task best, session stats, auto-save chip; Settings as centered card column with BACK + AUTO-SAVE; Results as centered card with ROUND COMPLETE/NEW BEST chips, big score, stat tiles, best row, recent list, REPEAT/BACK. Theme: Charcoal BORDER/SURFACE palette, 10-16 px rounding, purple/blue accent from Settings.colors.background_accent (UiAccent resource), enlarged type scale
+- verified screenshots: Home, Settings, Results render correctly at 2560x1440 borderless and 1280x720 windowed; KDE Remote Control prompt triggered by synthetic input was denied to unblock the desktop
+- RESPONSIVE FIX (user report): layout no longer uses ctx.content_rect(); ui::page_size(ctx, window) = window logical size * scale/ppp and widgets::page() draws an Area at (0,0) sized to it. Home sidebar+scroll, Settings centered card column with bounded ScrollArea, Results centered card with scroll. Verified at 1280x720 and live XResizeWindow to 1024x600 (reflows correctly). Bar chart caps bar width, ASCII arrows instead of missing glyphs
+- Temp boot-into-Results test wrote a placeholder scores.toml (task id ""); scores.toml was reset to empty after the test
+- Home alignment low-res fix (user report): removed the hard minimum widths that broke column boundaries when the window is small; top/bottom widths now share the same arithmetic at any width, and the sidebar shrinks to 168 px below 1050 px inner width. Verified at 900x600 and 1280x720 windowed
+- Home alignment (user report): top-row widths now derive from the bottom row: Personal Best + Recent Rounds together span exactly the Task Selection card, and Stats Overall spans exactly Session Stats (shared left/right edges). Verified windowed 1280x720
+- Home layout fixes (user report): all top cards use identical fixed height via widgets::fixed_card; Stats Overall HITS/MISSES/ROUNDS now use a 3-column Grid (aligned label/value rows, no stagger or clipping); overall card content compacted; card heights scale by viewport with min 185 (top) / 330 (bottom). Verified windowed 1280x720 and borderless 2560x1440
+- Home layout (user request): reorganized to reference mockup: 200 px icon sidebar (Home/Play/Settings/Quit, status dot + READY v0.1.0), breadcrumb + telemetry chip, welcome header + QUICK PLAY, top row of 3 equal fixed-size cards (Personal Best with trophy, Recent Rounds chart, Stats Overall with accuracy bar + Hits/Misses/Rounds columns), bottom row Task Selection (full-width rows with name/description/tag + PLAY, scrolling) and Session Stats. Cards use widgets::fixed_card (exact size, clipped) so content never resizes them; heights scale with viewport. Verified borderless 2560x1440 and windowed 1280x720
+- Settings layout (user request): centered 2x3 grid of identical card size. Cards are painted at exact width/height (allocate_exact_size + manual rect fill/stroke, content clipped) so content can never resize them. Crosshair layout is exactly 2 columns x 3 rows: Size|Style, Thickness|Color, Gap|Outline. Video compacted to 2 rows; RESET TO DEFAULTS centered outside the grid. Verified at 1280x720
+- Camera: DebandDither::Disabled alongside Tonemapping::None (removes dithering warning)
+- Rename (user request): display name is now "AimRust" (window title, sidebar brand, dashboard breadcrumb). Internal package name `aim_trainer` and config dir `~/.config/aim_trainer` kept so existing settings/scores are preserved
+- Custom color fix (user request): room surface materials are now unlit (StandardMaterial.unlit = true) and PlayerCamera uses Tonemapping::None, so Settings colors render exactly instead of being darkened by lighting/tonemap. Verified: white walls/ceiling read 255,255,255 (previously ~197 grey unlit and much darker lit); target spheres/gun remain lit. Room is intentionally flat-shaded now. User settings.toml preserved
+- UI cursor (user request): visuals.interact_cursor = PointingHand, so every egui button/interactive widget in Home/Play/Settings/Results shows a pointer hand (bevy_egui cursor updates enabled by default)
+- UI margins (user request): widgets::PAGE_MARGIN = 18 px; widgets::page() insets all pages by it and exposes page_inner(); Home sidebar/content, Settings column and Results card all use the inset area so nothing touches the window borders (verified Home at 1280x720)
+- sixshot: 6 spheres r 0.2 on z -15, random x -4..4 / y 0.8..3.8, min 1.0 m apart; hit -> despawn + new position sampled >=1.0 m from remaining targets AND the vacated spot (200 attempts, best-candidate fallback); marker SixshotEntity; cleanup Results/Menu; no lifetime
+- visual test blocked by KDE "Remote Control (python3 is asking to control input devices)" dialog during X11 automation; not answered; user to dismiss and test a 30 s round
+
+## Blockers
+- KDE Remote Control permission dialog (python3 input access) appeared during automation; left unanswered for user
+
+- spidershot: one sphere r 0.25 on z -15, center (0,1.7); odd index near (offset radius <=1.0), even index far (radius 3..5, random angle, clamped x -6..6 / y 0.5..4.5); hit -> despawn + next; SpidershotState.index tracks alternation; no lifetime
+- no-repeat spawn rule satisfied by near/far alternation (consecutive spawns always different distances)
+
+- tracking_follow: one sphere r 0.35 on z -15, bounds x -5..5 / y 0.8..4, speed 3 m/s, new random direction every 0.5-1.5 s, velocity lerp alpha=min(dt*6,1), position clamped+bounced at bounds (velocity and target_velocity reflected); no lifetime/firing, core Tracking scoring via AimingAt
+- tracking_follow marker TrackingFollowEntity, cleanup Results/Menu
+
+- tracking_shoot: one sphere r 0.3 on z -15, bounds x -5..5 / y 0.8..4, speed 4 m/s, local motion logic (new direction 0.5-1.5 s, lerp alpha=min(dt*6,1), bounce), lifetime 4 s; hit or TargetExpired -> despawn + respawn at random position >=1 m from old one with new direction; marker TrackingShootEntity; cleanup Results/Menu
+- tracking_shoot guards same-frame hit+expiry double respawn via handled entity list
+
+- flick: one sphere r 0.25 on z -15, x -6..6 / y 0.6..4.2, lifetime 1.2 s; after removal (hit or TargetExpired) wait random 0.3-1.0 s, then respawn >=1 m from the previous spot; FlickState waiting/timer/last_position; marker FlickEntity; cleanup Results/Menu
+- all 21 tasks complete; user still needs to playtest levels (Target 14 gun orientation + Tasks 16-21)
+
+## Next
+- none (all tasks complete)
