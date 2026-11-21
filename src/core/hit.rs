@@ -4,8 +4,13 @@
 use bevy::prelude::*;
 
 use crate::core::camera::PlayerCamera;
+use crate::core::hit_zone::{HitZone, ReactionTimer, TargetHitbox};
 use crate::core::input::Shot;
+use crate::core::round::RoundTimer;
+use crate::core::score::RoundScore;
+use crate::core::settings::UserSettings;
 use crate::core::state::AppState;
+use crate::core::task_api;
 
 #[derive(Clone, Copy, Debug)]
 pub enum TargetShape {
@@ -27,6 +32,8 @@ pub struct Expired;
 #[derive(Message)]
 pub struct TargetHit {
     pub entity: Entity,
+    pub hit_zone: Option<HitZone>,
+    pub reaction_ms: Option<f32>,
 }
 
 #[derive(Message)]
@@ -51,7 +58,7 @@ impl Plugin for HitPlugin {
             .init_resource::<AimingAt>()
             .add_systems(
                 Update,
-                (expire_targets, update_aiming, consume_shots)
+                (crate::core::hit_zone::tick_reaction_timers, expire_targets, update_aiming, consume_shots)
                     .chain()
                     .run_if(in_state(AppState::Playing)),
             );
@@ -136,17 +143,61 @@ fn update_aiming(
 }
 
 /// Turns each shot into a hit or a miss based on the current aim.
+#[allow(clippy::too_many_arguments)]
 fn consume_shots(
+    mut commands: Commands,
     mut shots: MessageReader<Shot>,
     aiming: Res<AimingAt>,
     mut hits: MessageWriter<TargetHit>,
     mut misses: MessageWriter<Miss>,
+    hitboxes: Query<&TargetHitbox>,
+    reaction_timers: Query<&ReactionTimer>,
+    parents: Query<&ChildOf>,
+    mut score: ResMut<RoundScore>,
+    settings: Res<UserSettings>,
+    mut timer: ResMut<RoundTimer>,
+    mut next_state: ResMut<NextState<AppState>>,
 ) {
     for _ in shots.read() {
         if let Some(entity) = aiming.0 {
-            hits.write(TargetHit { entity });
+            let hit_zone = hitboxes.get(entity).ok().map(|hb| hb.zone);
+            let reaction_ms = reaction_timers
+                .get(entity)
+                .map(|rt| rt.elapsed_ms)
+                .ok()
+                .or_else(|| {
+                    parents
+                        .get(entity)
+                        .ok()
+                        .and_then(|parent| reaction_timers.get(parent.parent()).ok())
+                        .map(|rt| rt.elapsed_ms)
+                });
+
+            if let Some(zone) = hit_zone {
+                task_api::on_target_hit(&mut score, zone, reaction_ms.unwrap_or(0.0));
+            }
+
+            hits.write(TargetHit {
+                entity,
+                hit_zone,
+                reaction_ms,
+            });
+
+            // Despawn reaction target if it has a hit zone (standard targets are handled by task respawn systems)
+            if hit_zone.is_some() {
+                let root = parents
+                    .get(entity)
+                    .map(|p| p.parent())
+                    .unwrap_or(entity);
+                commands.entity(root).despawn();
+            }
         } else {
             misses.write(Miss);
+            if settings.doa_mode_enabled {
+                score.points = 0;
+                timer.doa_failed = true;
+                next_state.set(AppState::Results);
+            }
         }
     }
 }

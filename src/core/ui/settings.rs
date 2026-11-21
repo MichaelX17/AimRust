@@ -306,6 +306,10 @@ fn gameplay_controls(ui: &mut egui::Ui, settings: &mut Settings, with_reset: boo
             row_label(ui, "Show gun");
             ui.checkbox(&mut settings.show_gun, "");
             ui.end_row();
+
+            row_label(ui, "Hold to ADS");
+            ui.checkbox(&mut settings.hold_to_ads, "");
+            ui.end_row();
         });
 
     if with_reset {

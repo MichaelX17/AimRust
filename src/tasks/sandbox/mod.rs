@@ -18,6 +18,7 @@ pub const INFO: TaskInfo = TaskInfo {
     name: "Sandbox",
     description: "Test level for settings and hit detection",
     scoring: ScoringMode::Click,
+    is_sniper_mode: true,
 };
 
 const LIFETIME_SECS: f32 = 3.0;

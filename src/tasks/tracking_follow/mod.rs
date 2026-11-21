@@ -13,6 +13,7 @@ pub const INFO: TaskInfo = TaskInfo {
     name: "Tracking: Follow",
     description: "Keep the crosshair on a moving target",
     scoring: ScoringMode::Tracking,
+    is_sniper_mode: false,
 };
 
 const RADIUS: f32 = 0.35;

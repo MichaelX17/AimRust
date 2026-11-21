@@ -62,9 +62,11 @@ fn click_scoring(
         return;
     }
 
-    for _ in hits.read() {
-        score.points += 10;
-        score.hits += 1;
+    for hit in hits.read() {
+        if hit.hit_zone.is_none() {
+            score.points += 10;
+            score.hits += 1;
+        }
     }
     for _ in misses.read() {
         score.points -= 3;

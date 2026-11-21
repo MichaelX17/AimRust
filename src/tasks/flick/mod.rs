@@ -12,6 +12,7 @@ pub const INFO: TaskInfo = TaskInfo {
     name: "Flick / Reaction",
     description: "Flick to targets that appear for 1.2 s",
     scoring: ScoringMode::Click,
+    is_sniper_mode: false,
 };
 
 const RADIUS: f32 = 0.25;

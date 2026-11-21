@@ -18,6 +18,7 @@ impl Default for RoundDuration {
 pub struct RoundTimer {
     pub duration: f32,
     pub remaining: f32,
+    pub doa_failed: bool,
 }
 
 #[derive(Resource)]
@@ -58,6 +59,7 @@ fn start_round(
 ) {
     timer.duration = duration.0 as f32;
     timer.remaining = duration.0 as f32;
+    timer.doa_failed = false;
     countdown.remaining = 3.0;
 }
 

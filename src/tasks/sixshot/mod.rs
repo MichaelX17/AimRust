@@ -12,6 +12,7 @@ pub const INFO: TaskInfo = TaskInfo {
     name: "Sixshot",
     description: "Six targets; hit one, another appears",
     scoring: ScoringMode::Click,
+    is_sniper_mode: false,
 };
 
 const TARGET_COUNT: usize = 6;

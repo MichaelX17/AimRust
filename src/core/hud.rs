@@ -31,6 +31,10 @@ fn hud_text(text: &str, field: HudField) -> impl Bundle {
         Text::new(text),
         TextFont::from_font_size(26.0),
         TextColor(Color::WHITE),
+        TextShadow {
+            offset: Vec2::splat(2.0),
+            color: Color::srgba(0.0, 0.0, 0.0, 0.85),
+        },
         field,
     )
 }

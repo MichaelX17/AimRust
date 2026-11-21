@@ -12,6 +12,7 @@ pub const INFO: TaskInfo = TaskInfo {
     name: "Gridshot",
     description: "3 targets on a 3x3 grid; hit to respawn",
     scoring: ScoringMode::Click,
+    is_sniper_mode: false,
 };
 
 const CELLS: usize = 9;

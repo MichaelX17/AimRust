@@ -34,6 +34,7 @@ bevy_egui = "=0.43.1"
 serde = { version = "=1.0.229", features = ["derive"] }
 toml = "=1.2.1"
 dirs = "=7.0.0"
+ron = "=0.12.3"
 
 [profile.dev]
 opt-level = 1

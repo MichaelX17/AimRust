@@ -6,6 +6,7 @@ use bevy_egui::{EguiContexts, egui};
 use crate::core::hud::format_time;
 use crate::core::round::RoundTimer;
 use crate::core::score::{RoundScore, click_accuracy, scoring_mode};
+use crate::core::settings::UserSettings;
 use crate::core::state::AppState;
 use crate::core::storage::{LastOutcome, Scores};
 use crate::core::task_api::{ScoringMode, SelectedTask, TaskRegistry};
@@ -20,6 +21,7 @@ pub struct ResultsData<'w> {
     selected: Res<'w, SelectedTask>,
     scores: Res<'w, Scores>,
     last: Res<'w, LastOutcome>,
+    settings: Res<'w, UserSettings>,
 }
 
 pub fn results_ui(
@@ -43,6 +45,7 @@ pub fn results_ui(
         selected,
         scores,
         last,
+        settings,
     } = data;
 
     let accent = accent.0;
@@ -65,6 +68,8 @@ pub fn results_ui(
     let card_width = (inner.x - 32.0).clamp(300.0, 460.0);
     let top = ((inner.y - 560.0) * 0.5).max(8.0);
 
+    let doa_failed = settings.doa_mode_enabled && timer.doa_failed;
+
     widgets::page(ctx, "results_screen", size, |ui| {
         egui::ScrollArea::vertical()
             .max_height(inner.y)
@@ -78,7 +83,7 @@ pub fn results_ui(
                         |ui| {
                             widgets::card().show(ui, |ui| {
                                 ui.set_width(ui.available_width());
-                                header(ui, accent, task_name, duration, last.new_best);
+                                header(ui, accent, task_name, duration, last.new_best, doa_failed);
                                 ui.add_space(10.0);
                                 headline(ui, mode, &score, &timer);
                                 ui.add_space(14.0);
@@ -103,11 +108,16 @@ fn header(
     task_name: &str,
     duration: u32,
     new_best: bool,
+    doa_failed: bool,
 ) {
     ui.horizontal(|ui| {
-        widgets::chip(ui, "ROUND COMPLETE", accent);
-        if new_best {
-            widgets::chip(ui, "NEW BEST", widgets::POSITIVE);
+        if doa_failed {
+            widgets::chip(ui, "ROUND FAILED - MISSED SHOT", widgets::NEGATIVE);
+        } else {
+            widgets::chip(ui, "ROUND COMPLETE", accent);
+            if new_best {
+                widgets::chip(ui, "NEW BEST", widgets::POSITIVE);
+            }
         }
         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
             widgets::muted(ui, format!("{task_name} · {}", format_time(duration)));

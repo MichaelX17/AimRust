@@ -15,6 +15,7 @@ pub struct Settings {
     pub colors: ColorsCfg,
     pub video: VideoCfg,
     pub show_gun: bool,
+    pub hold_to_ads: bool,
 }
 
 impl Default for Settings {
@@ -26,6 +27,7 @@ impl Default for Settings {
             colors: ColorsCfg::default(),
             video: VideoCfg::default(),
             show_gun: true,
+            hold_to_ads: true,
         }
     }
 }

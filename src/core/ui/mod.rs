@@ -8,6 +8,7 @@ use crate::core::state::AppState;
 pub mod menu;
 pub mod pause;
 pub mod results;
+pub mod scope;
 pub mod settings;
 pub mod task_select;
 pub mod time_select;
@@ -48,6 +49,7 @@ impl Plugin for UiPlugin {
                     time_select::time_select_ui.run_if(in_state(AppState::TimeSelect)),
                     pause::pause_ui.run_if(in_state(AppState::Paused)),
                     results::results_ui.run_if(in_state(AppState::Results)),
+                    scope::scope_ui.run_if(in_gameplay),
                 )
                     .chain(),
             )
@@ -59,6 +61,10 @@ impl Plugin for UiPlugin {
                 ),
             );
     }
+}
+
+fn in_gameplay(state: Res<State<AppState>>) -> bool {
+    matches!(*state.get(), AppState::Playing | AppState::Countdown)
 }
 
 /// Applies the dashboard look from `Settings.colors.background_accent`; re-runs

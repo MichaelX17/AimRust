@@ -14,6 +14,7 @@ pub const INFO: TaskInfo = TaskInfo {
     name: "Spidershot",
     description: "One target, alternating near and far",
     scoring: ScoringMode::Click,
+    is_sniper_mode: false,
 };
 
 const RADIUS: f32 = 0.25;

@@ -14,6 +14,7 @@ pub const INFO: TaskInfo = TaskInfo {
     name: "Tracking: Shoot",
     description: "Track and shoot a short-lived moving target",
     scoring: ScoringMode::Click,
+    is_sniper_mode: false,
 };
 
 const RADIUS: f32 = 0.3;
