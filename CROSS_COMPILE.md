@@ -30,7 +30,7 @@ cargo xwin build --target x86_64-pc-windows-msvc --release
 
 Upon completion, the compiled Windows executable will be located at:
 ```text
-target/x86_64-pc-windows-msvc/release/aim_trainer.exe
+target/x86_64-pc-windows-msvc/release/AimRust.exe
 ```
 
-> **Note:** Remember to package the `assets/` directory alongside `aim_trainer.exe` when distributing the build.
+> **Note:** Remember to package the `assets/` directory alongside `AimRust.exe` when distributing the build.

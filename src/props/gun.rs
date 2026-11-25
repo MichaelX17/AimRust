@@ -90,6 +90,8 @@ fn spawn_model(commands: &mut Commands, asset_server: &AssetServer, camera: Enti
 
 /// Triggers procedural shooting animation on the gun model only when in hip-fire mode (No ADS).
 fn trigger_hipfire_gun_anim(
+    settings: Res<Settings>,
+    user_settings: Res<UserSettings>,
     ads: Res<AdsState>,
     mut shots: MessageReader<Shot>,
     mut gun_query: Query<&mut GunShootAnim, With<Gun>>,
@@ -100,6 +102,10 @@ fn trigger_hipfire_gun_anim(
     }
 
     if !has_shot {
+        return;
+    }
+
+    if !settings.recoil_enabled || !user_settings.recoil_enabled {
         return;
     }
 

@@ -1,8 +1,12 @@
 //! Sixshot: six sphere targets, always visible, respawn on hit.
+//! Follows the standard AimRust Default arena and target visual conventions.
 
 use bevy::prelude::*;
 
+use crate::core::camera::PlayerCamera;
 use crate::core::hit::TargetHit;
+use crate::core::hit_zone::ReactionTimer;
+use crate::core::input::PlayerLook;
 use crate::core::state::AppState;
 use crate::core::task_api::{ScoringMode, TaskInfo, task_playing, task_selected};
 use crate::props::targets::{TargetMaterial, spawn_sphere};
@@ -16,7 +20,7 @@ pub const INFO: TaskInfo = TaskInfo {
 };
 
 const TARGET_COUNT: usize = 6;
-const RADIUS: f32 = 0.2;
+const RADIUS: f32 = 0.20;
 const PLANE_Z: f32 = -15.0;
 const X_RANGE: f32 = 4.0;
 const Y_MIN: f32 = 0.8;
@@ -24,8 +28,20 @@ const Y_RANGE: f32 = 3.0;
 const MIN_DISTANCE: f32 = 1.0;
 const MAX_ATTEMPTS: usize = 200;
 
+// Backboard wall geometry on the Default arena
+const WALL_WIDTH: f32 = 14.0;
+const WALL_HEIGHT: f32 = 6.5;
+const WALL_DEPTH: f32 = 0.3;
+const WALL_Z: f32 = -15.6;
+
 #[derive(Component)]
 struct SixshotEntity;
+
+#[derive(Component)]
+struct SixshotPopParticle {
+    velocity: Vec3,
+    timer: Timer,
+}
 
 #[derive(Resource)]
 struct SixshotRng(u64);
@@ -46,8 +62,12 @@ impl SixshotRng {
         x
     }
 
-    fn next_f32(&mut self) -> f32 {
-        ((self.next_u64() >> 40) as u32) as f32 / 16_777_216.0
+    fn gen_f32(&mut self) -> f32 {
+        (self.next_u64() >> 40) as f32 / (1u32 << 24) as f32
+    }
+
+    fn gen_range(&mut self, min: f32, max: f32) -> f32 {
+        min + self.gen_f32() * (max - min)
     }
 }
 
@@ -64,7 +84,10 @@ impl Plugin for SixshotPlugin {
                 OnEnter(AppState::Countdown),
                 setup.run_if(task_selected(INFO.id)),
             )
-            .add_systems(Update, respawn_on_hit.run_if(task_playing(INFO.id)))
+            .add_systems(
+                Update,
+                (respawn_on_hit, update_pop_particles).run_if(task_playing(INFO.id)),
+            )
             .add_systems(OnEnter(AppState::Results), cleanup)
             .add_systems(OnEnter(AppState::Menu), cleanup);
     }
@@ -72,8 +95,8 @@ impl Plugin for SixshotPlugin {
 
 fn sample_position(rng: &mut SixshotRng) -> Vec3 {
     Vec3::new(
-        -X_RANGE + rng.next_f32() * X_RANGE * 2.0,
-        Y_MIN + rng.next_f32() * Y_RANGE,
+        rng.gen_range(-X_RANGE, X_RANGE),
+        rng.gen_range(Y_MIN, Y_MIN + Y_RANGE),
         PLANE_Z,
     )
 }
@@ -108,15 +131,90 @@ fn spawn_target(
     position: Vec3,
 ) {
     let entity = spawn_sphere(commands, meshes, material, position, RADIUS, None);
-    commands.entity(entity).insert(SixshotEntity);
+    commands
+        .entity(entity)
+        .insert((SixshotEntity, ReactionTimer::new()));
+}
+
+fn spawn_backboard_wall(
+    commands: &mut Commands,
+    meshes: &mut Assets<Mesh>,
+    materials: &mut Assets<StandardMaterial>,
+) {
+    let backboard_mat = materials.add(StandardMaterial {
+        base_color: Color::srgb_u8(0xD6, 0xD9, 0xDE),
+        perceptual_roughness: 0.92,
+        metallic: 0.01,
+        reflectance: 0.2,
+        ..default()
+    });
+
+    let shadow_mat = materials.add(StandardMaterial {
+        base_color: Color::srgba_u8(0x0a, 0x0c, 0x0f, 0x99),
+        alpha_mode: AlphaMode::Blend,
+        perceptual_roughness: 1.0,
+        metallic: 0.0,
+        ..default()
+    });
+
+    commands.spawn((
+        Mesh3d(meshes.add(Cuboid::new(WALL_WIDTH, WALL_HEIGHT, WALL_DEPTH))),
+        MeshMaterial3d(backboard_mat),
+        Transform::from_xyz(0.0, WALL_HEIGHT * 0.5, WALL_Z),
+        SixshotEntity,
+    ));
+
+    commands.spawn((
+        Mesh3d(meshes.add(Cuboid::new(WALL_WIDTH + 0.4, 0.002, 0.4))),
+        MeshMaterial3d(shadow_mat),
+        Transform::from_xyz(0.0, 0.0018, WALL_Z),
+        SixshotEntity,
+    ));
+}
+
+fn spawn_pop_particles(
+    commands: &mut Commands,
+    meshes: &mut Assets<Mesh>,
+    material: &TargetMaterial,
+    pos: Vec3,
+    rng: &mut SixshotRng,
+) {
+    let particle_mesh = meshes.add(Sphere::new(0.025));
+    for _ in 0..6 {
+        let vx = rng.gen_range(-1.8, 1.8);
+        let vy = rng.gen_range(-1.0, 2.0);
+        let vz = rng.gen_range(0.2, 1.8);
+
+        commands.spawn((
+            Mesh3d(particle_mesh.clone()),
+            MeshMaterial3d(material.0.clone()),
+            Transform::from_translation(pos),
+            SixshotPopParticle {
+                velocity: Vec3::new(vx, vy, vz),
+                timer: Timer::from_seconds(0.14, TimerMode::Once),
+            },
+            SixshotEntity,
+        ));
+    }
 }
 
 fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
     material: Res<TargetMaterial>,
     mut rng: ResMut<SixshotRng>,
+    mut look: ResMut<PlayerLook>,
+    mut cameras: Query<&mut Transform, With<PlayerCamera>>,
 ) {
+    *look = PlayerLook::default();
+    if let Ok(mut cam_t) = cameras.single_mut() {
+        cam_t.translation = Vec3::new(0.0, 1.7, 0.0);
+        cam_t.rotation = Quat::IDENTITY;
+    }
+
+    spawn_backboard_wall(&mut commands, &mut meshes, &mut materials);
+
     let mut occupied: Vec<Vec3> = Vec::with_capacity(TARGET_COUNT);
     for _ in 0..TARGET_COUNT {
         let position = random_valid_position(&mut rng, &occupied);
@@ -140,6 +238,8 @@ fn respawn_on_hit(
         };
         let vacated = vacated_transform.translation;
 
+        spawn_pop_particles(&mut commands, &mut meshes, &material, vacated, &mut rng);
+
         // Keep distance from the remaining targets and from the just-vacated
         // spot: a target never respawns where it was hit.
         let mut occupied: Vec<Vec3> = targets
@@ -156,8 +256,26 @@ fn respawn_on_hit(
     }
 }
 
-fn cleanup(mut commands: Commands, targets: Query<Entity, With<SixshotEntity>>) {
-    for entity in &targets {
+fn update_pop_particles(
+    mut commands: Commands,
+    time: Res<Time>,
+    mut particles: Query<(Entity, &mut Transform, &mut SixshotPopParticle)>,
+) {
+    let dt = time.delta_secs();
+    for (entity, mut transform, mut particle) in &mut particles {
+        particle.timer.tick(time.delta());
+        if particle.timer.is_finished() {
+            commands.entity(entity).despawn();
+        } else {
+            transform.translation += particle.velocity * dt;
+            let frac = 1.0 - particle.timer.fraction();
+            transform.scale = Vec3::splat(frac);
+        }
+    }
+}
+
+fn cleanup(mut commands: Commands, entities: Query<Entity, With<SixshotEntity>>) {
+    for entity in &entities {
         commands.entity(entity).despawn();
     }
 }

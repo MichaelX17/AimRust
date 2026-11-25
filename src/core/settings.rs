@@ -4,6 +4,8 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
 
+use crate::core::paths;
+
 #[derive(Resource, Debug, Clone)]
 pub struct HeadhunterAdsState {
     pub is_ads: bool,
@@ -70,7 +72,7 @@ impl Default for UserSettings {
 }
 
 fn settings_path() -> Option<PathBuf> {
-    dirs::config_dir().map(|dir| dir.join("AimRust").join("settings.ron"))
+    paths::config_file_path_with_fallback("settings.ron", "AimRust")
 }
 
 pub fn load_settings() -> UserSettings {

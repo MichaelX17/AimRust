@@ -88,21 +88,33 @@ fn tick_round(
     }
 }
 
-/// Big centered 3-2-1 text during the countdown.
+/// Big centered 3-2-1 text during the countdown with a drop shadow for contrast.
 fn countdown_ui(mut contexts: EguiContexts, countdown: Res<Countdown>) {
     let Ok(ctx) = contexts.ctx_mut() else {
         return;
     };
-    let number = countdown.remaining.ceil().clamp(1.0, 3.0) as u32;
+    let text = (countdown.remaining.ceil().clamp(1.0, 3.0) as u32).to_string();
+    let font = egui::FontId::proportional(140.0);
+    let center = ctx.content_rect().center();
 
-    egui::Area::new(egui::Id::new("countdown"))
-        .anchor(egui::Align2::CENTER_CENTER, egui::Vec2::ZERO)
-        .show(ctx, |ui| {
-            ui.label(
-                egui::RichText::new(number.to_string())
-                    .size(140.0)
-                    .strong()
-                    .color(egui::Color32::WHITE),
-            );
-        });
+    let painter = ctx.layer_painter(egui::LayerId::new(
+        egui::Order::Foreground,
+        egui::Id::new("countdown"),
+    ));
+
+    // Soft dark drop shadow so white numbers stand out cleanly against light walls/sky
+    painter.text(
+        center + egui::vec2(4.0, 6.0),
+        egui::Align2::CENTER_CENTER,
+        &text,
+        font.clone(),
+        egui::Color32::from_rgba_unmultiplied(0, 0, 0, 200),
+    );
+    painter.text(
+        center,
+        egui::Align2::CENTER_CENTER,
+        &text,
+        font,
+        egui::Color32::WHITE,
+    );
 }

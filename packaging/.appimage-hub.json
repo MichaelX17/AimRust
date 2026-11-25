@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "id": "io.github.michaelx17.AimRust",
+  "display_name": "AimRust",
+  "generic_name": "AimRust",
+  "comment": "Fast, modern aim trainer built with Rust and Bevy",
+  "categories": "Game;ActionGame;",
+  "startup_notify": true,
+  "args": [],
+  "source": {
+    "type": "github_only",
+    "github_repo": "https://github.com/MichaelX17/AimRust"
+  },
+  "current_version": "0.1.0",
+  "asset_preference": "AimRust-x86_64.AppImage",
+  "file": "AimRust-x86_64.AppImage",
+  "icon": "aim-rust.png"
+}

@@ -1,7 +1,7 @@
 # AimRust — agent instructions
 
 ## Project
-Aim trainer in Rust. Bevy 0.20.1 + bevy_egui 0.43.1, edition 2024. Binary crate (Cargo.lock tracked).
+Aim trainer in Rust. Bevy 0.20.1 + bevy_egui 0.43.1, edition 2024. Binary crate `AimRust` (Cargo.lock tracked).
 Single binary. No web, no async runtime beyond Bevy's.
 
 ## Commands
@@ -11,22 +11,37 @@ Single binary. No web, no async runtime beyond Bevy's.
 - Run: `cargo run`
 
 ## Layout
-- `src/main.rs` — app bootstrap: `CorePlugin`, `PropsPlugin`, `TasksPlugin`.
-- `src/core/*` — game core (state, hit messages, task API, config, HUD, UI, input, round, score, storage, arena, camera, crosshair, video).
-- `src/props/*` — target/gun/environment builders (`spawn_sphere`, `spawn_box`, `TargetMaterial`).
-- `src/tasks/<name>/mod.rs` — aim tasks; self-contained.
-- `assets/` — assets. `docs/ADDING_A_TASK.md` — full task authoring guide.
+- `src/main.rs` — app bootstrap: `CorePlugin`, `PropsPlugin`, `TasksPlugin`, window app ID config.
+- `src/core/*` — game core:
+  - `state.rs`, `round.rs`, `score.rs`, `storage.rs`: Game states (`AppState`, `TaskState`), timer/countdown, hit/miss tracking, and local score persistence.
+  - `config.rs`, `settings.rs`, `paths.rs`: Runtime config (`Settings`), portable mode resolution, and file paths.
+  - `hit.rs`, `hit_zone.rs`, `task_api.rs`: Raycasting, hit detection, target interaction contract (`HitMessage`, `MissMessage`).
+  - `audio.rs`: Sound generation/playback for Hit and Miss effects with volume control.
+  - `discord/`: Zero-dependency Discord Rich Presence IPC client (`DiscordIpcPlugin`).
+  - `camera.rs`, `crosshair.rs`, `input.rs`, `ads.rs`, `video.rs`: First-person controller, dynamic crosshairs, ADS, and windowing.
+  - `hud.rs`, `arena.rs`: Task runtime HUD and arena spawning wrappers.
+  - `ui/*`: All egui screens (`main_menu`, `hud`, `settings`, `results`, `widgets/`).
+- `src/world/*` — 3D environments (`default_arena`, `cylinder_arena`, `graybox_arena`, `open_horizon_arena`).
+- `src/props/*` — target/gun/environment entity builders (`targets.rs`, `gun.rs`, `environment.rs`).
+- `src/tasks/*` — self-contained aim task modules registered via `register_tasks!(...)` in `src/tasks/mod.rs`:
+  - Tasks: `sandbox`, `gridshot`, `sixshot`, `spidershot`, `flick`, `micro_adjust`, `tracking_follow`, `tracking_shoot`, `cylinder_micro`, `peek_exercise`, `multishot_ultimate`.
+- `packaging/` — Linux packaging (AppImage script, desktop entry `io.github.michaelx17.AimRust`, AppStream metainfo).
+- `assets/` — textures, models, and audio. Full task guide in `docs/ADDING_A_TASK.md`.
 
 ## Adding a task
-Copy `src/tasks/_template/mod.rs` → `src/tasks/<name>/mod.rs`; set `INFO`; add `<name>` to `register_tasks!(...)` in `src/tasks/mod.rs`; run check + clippy; play a full round. See `.agents/rules/task-module.md` and `docs/ADDING_A_TASK.md`.
+1. Copy `src/tasks/_template/mod.rs` → `src/tasks/<name>/mod.rs`.
+2. Define `INFO` with metadata, target counts, duration, and instructions.
+3. Register `<name>` in `register_tasks!(...)` within `src/tasks/mod.rs`.
+4. Ensure targets obey `Settings.colors.target` and follow the standard task interface (no custom in-task egui).
+5. Run check + clippy; verify a full round. See `.agents/rules/task-module.md` and `docs/ADDING_A_TASK.md`.
 
 ## Egui boundary
-All UI (menus/HUD/settings/results) is in `src/core/ui/*`; tasks never draw egui. See `.agents/rules/egui-boundary.md`.
+All UI (menus/HUD/settings/results) is strictly confined to `src/core/ui/*`; tasks never draw egui directly. See `.agents/rules/egui-boundary.md`.
 
 ## Conventions
 - Bevy 0.20: messages (`MessageReader`/`MessageWriter`), not events.
 - Task-scoped types prefixed with task name; marker components; `#[allow(dead_code)]` on unused helpers.
-- No new crates, no core changes outside the contract, no renames outside your folder, config read-only.
+- No new crates without explicit approval; no core changes outside the contract; no renames outside your target folder; config is read-only for tasks.
 - `cargo check` and `cargo clippy` must be clean.
 
 ## Hard rules

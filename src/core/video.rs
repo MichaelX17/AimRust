@@ -27,10 +27,18 @@ pub fn apply_video_settings(
                 WindowMode::Borderless => {
                     BevyWindowMode::BorderlessFullscreen(MonitorSelection::Current)
                 }
-                WindowMode::Fullscreen => BevyWindowMode::Fullscreen(
-                    MonitorSelection::Current,
-                    VideoModeSelection::Current,
-                ),
+                WindowMode::Fullscreen => {
+                    // Wayland does not support exclusive fullscreen (`winit` ignores it);
+                    // compositor fullscreen (`BorderlessFullscreen`) is the native equivalent.
+                    if is_wayland_session() {
+                        BevyWindowMode::BorderlessFullscreen(MonitorSelection::Current)
+                    } else {
+                        BevyWindowMode::Fullscreen(
+                            MonitorSelection::Current,
+                            VideoModeSelection::Current,
+                        )
+                    }
+                }
             };
     }
 
@@ -45,4 +53,15 @@ pub fn apply_video_settings(
         }
     }
     *last_frame = Some(Instant::now());
+}
+
+fn is_wayland_session() -> bool {
+    #[cfg(target_os = "linux")]
+    {
+        std::env::var_os("WAYLAND_DISPLAY").is_some()
+    }
+    #[cfg(not(target_os = "linux"))]
+    {
+        false
+    }
 }

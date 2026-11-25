@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.michaelx17.AimRust</id>
+  <name>AimRust</name>
+  <summary>Fast, modern aim trainer built with Rust and Bevy</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <description>
+    <p>
+      AimRust is a high-performance FPS aim trainer built from the ground up in Rust using Bevy Engine.
+      It features responsive mechanics, customizable crosshairs, sensitivity scaling, ADS, and various aim training scenarios.
+    </p>
+    <ul>
+      <li>Multiple aim-training task modes (Gridshot, Flick, Spidershot, Tracking, and more)</li>
+      <li>In-depth session results, accuracy stats, and score tracking</li>
+      <li>Customizable crosshair styles, colors, and camera FOV settings</li>
+      <li>ADS mechanics, recoil simulation, and chamber mode</li>
+      <li>Optional portable mode via portable.ini to keep settings self-contained</li>
+    </ul>
+  </description>
+  <launchable type="desktop-id">io.github.michaelx17.AimRust.desktop</launchable>
+  <icon type="stock">aim-rust</icon>
+  <developer id="io.github.michaelx17">
+    <name>MichaelX17</name>
+  </developer>
+  <categories>
+    <category>Game</category>
+    <category>ActionGame</category>
+  </categories>
+  <url type="homepage">https://github.com/MichaelX17/AimRust</url>
+  <url type="bugtracker">https://github.com/MichaelX17/AimRust/issues</url>
+  <url type="vcs-browser">https://github.com/MichaelX17/AimRust</url>
+  <releases>
+    <release version="0.1.0" date="2026-11-21"/>
+  </releases>
+  <content_rating type="oars-1.1"/>
+</component>

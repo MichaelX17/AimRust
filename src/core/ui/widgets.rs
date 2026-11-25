@@ -4,14 +4,22 @@ use bevy_egui::egui;
 use egui::{Color32, CornerRadius, Margin, RichText, Stroke};
 
 pub const PAGE_MARGIN: f32 = 18.0;
-pub const BG: Color32 = Color32::from_rgb(10, 10, 16);
-pub const SURFACE: Color32 = Color32::from_rgb(17, 17, 26);
-pub const SURFACE_2: Color32 = Color32::from_rgb(25, 25, 38);
-pub const BORDER: Color32 = Color32::from_rgb(38, 38, 56);
-pub const TEXT: Color32 = Color32::from_rgb(232, 232, 244);
-pub const TEXT_WEAK: Color32 = Color32::from_rgb(142, 142, 164);
-pub const POSITIVE: Color32 = Color32::from_rgb(52, 211, 153);
-pub const NEGATIVE: Color32 = Color32::from_rgb(248, 113, 113);
+pub const BG: Color32 = Color32::from_rgb(19, 21, 26); // #13151A deep charcoal canvas
+pub const SURFACE: Color32 = Color32::from_rgb(30, 33, 40); // #1E2128 elevated card surface
+pub const SURFACE_2: Color32 = Color32::from_rgb(33, 37, 43); // #21252B dark-slate sidebar / inset tile
+pub const SURFACE_HOVER: Color32 = Color32::from_rgb(43, 48, 58); // #2B303A active pill / hovered row
+pub const BORDER: Color32 = Color32::from_rgb(44, 49, 58); // #2C313A subtle 1px border
+pub const TEXT: Color32 = Color32::from_rgb(245, 247, 250);
+pub const TEXT_WEAK: Color32 = Color32::from_rgb(148, 163, 184);
+pub const TEXT_SUBTLE: Color32 = Color32::from_rgb(154, 163, 178);
+pub const GRID: Color32 = Color32::from_rgb(39, 44, 53);
+pub const POSITIVE: Color32 = Color32::from_rgb(16, 185, 129);
+pub const NEGATIVE: Color32 = Color32::from_rgb(244, 63, 94);
+pub const TARGET_YELLOW: Color32 = Color32::from_rgb(255, 214, 10); // #FFD60A
+pub const TARGET_YELLOW_DIM: Color32 = Color32::from_rgb(245, 183, 0); // #F5B700
+pub const ACCENT_CYAN: Color32 = Color32::from_rgb(56, 188, 248); // #38BDF8
+pub const ACCENT_CYAN_GLOW: Color32 = Color32::from_rgb(0, 229, 255); // #00E5FF
+pub const ACCENT_VIOLET: Color32 = Color32::from_rgb(129, 140, 248); // #818CF8
 
 /// Full-page dark background sized by the real window size.
 pub fn page_inner(size: egui::Vec2) -> egui::Vec2 {
@@ -80,6 +88,7 @@ pub fn card() -> egui::Frame {
 }
 
 /// Smaller inset tile, used for stats inside cards.
+#[allow(dead_code)]
 pub fn tile() -> egui::Frame {
     egui::Frame::new()
         .fill(SURFACE_2)
@@ -100,6 +109,7 @@ pub fn muted(ui: &mut egui::Ui, text: impl Into<String>) {
     ui.label(RichText::new(text.into()).size(13.0).color(TEXT_WEAK));
 }
 
+#[allow(dead_code)]
 pub fn big_value(ui: &mut egui::Ui, text: impl Into<String>, size: f32) {
     ui.label(
         RichText::new(text.into())
@@ -109,6 +119,7 @@ pub fn big_value(ui: &mut egui::Ui, text: impl Into<String>, size: f32) {
     );
 }
 
+#[allow(dead_code)]
 pub fn chip(ui: &mut egui::Ui, text: &str, color: Color32) {
     egui::Frame::new()
         .fill(color.gamma_multiply(0.16))
@@ -120,6 +131,7 @@ pub fn chip(ui: &mut egui::Ui, text: &str, color: Color32) {
         });
 }
 
+#[allow(dead_code)]
 fn text_on(fill: Color32) -> Color32 {
     let [r, g, b, _] = fill.to_array();
     if (r as u16 + g as u16 + b as u16) / 3 > 170 {
@@ -129,6 +141,7 @@ fn text_on(fill: Color32) -> Color32 {
     }
 }
 
+#[allow(dead_code)]
 pub fn primary_button(ui: &mut egui::Ui, text: &str, accent: Color32) -> egui::Response {
     ui.add(
         egui::Button::new(
@@ -155,6 +168,7 @@ pub fn ghost_button(ui: &mut egui::Ui, text: &str) -> egui::Response {
 }
 
 /// Minimal bar chart drawn with the painter.
+#[allow(dead_code)]
 pub fn bar_chart(
     ui: &mut egui::Ui,
     values: &[f32],

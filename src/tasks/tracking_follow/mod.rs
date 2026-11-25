@@ -1,9 +1,13 @@
 //! Tracking Follow: one smoothly moving target; core scores time on target.
+//! Follows the standard AimRust Default arena (no backboard wall, open map).
 
 use std::f32::consts::TAU;
 
 use bevy::prelude::*;
 
+use crate::core::camera::PlayerCamera;
+use crate::core::hit_zone::ReactionTimer;
+use crate::core::input::PlayerLook;
 use crate::core::state::AppState;
 use crate::core::task_api::{ScoringMode, TaskInfo, task_playing, task_selected};
 use crate::props::targets::{TargetMaterial, spawn_sphere};
@@ -56,13 +60,17 @@ impl TrackingFollowRng {
         x
     }
 
-    fn next_f32(&mut self) -> f32 {
-        ((self.next_u64() >> 40) as u32) as f32 / 16_777_216.0
+    fn gen_f32(&mut self) -> f32 {
+        (self.next_u64() >> 40) as f32 / (1u32 << 24) as f32
     }
 
     fn next_direction(&mut self) -> Vec2 {
-        let angle = self.next_f32() * TAU;
+        let angle = self.gen_f32() * TAU;
         Vec2::new(angle.cos(), angle.sin())
+    }
+
+    fn gen_range(&mut self, min: f32, max: f32) -> f32 {
+        min + self.gen_f32() * (max - min)
     }
 }
 
@@ -90,21 +98,31 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     material: Res<TargetMaterial>,
     mut rng: ResMut<TrackingFollowRng>,
+    mut look: ResMut<PlayerLook>,
+    mut cameras: Query<&mut Transform, With<PlayerCamera>>,
 ) {
+    *look = PlayerLook::default();
+    if let Ok(mut cam_t) = cameras.single_mut() {
+        cam_t.translation = Vec3::new(0.0, 1.7, 0.0);
+        cam_t.rotation = Quat::IDENTITY;
+    }
+
     let start = Vec3::new(
-        MIN_X + rng.next_f32() * (MAX_X - MIN_X),
-        MIN_Y + rng.next_f32() * (MAX_Y - MIN_Y),
+        rng.gen_range(MIN_X, MAX_X),
+        rng.gen_range(MIN_Y, MAX_Y),
         PLANE_Z,
     );
     let direction = rng.next_direction() * SPEED;
+    let change_in = rng.gen_range(MIN_CHANGE, MAX_CHANGE);
 
     let entity = spawn_sphere(&mut commands, &mut meshes, &material, start, RADIUS, None);
     commands.entity(entity).insert((
         TrackingFollowEntity,
+        ReactionTimer::new(),
         TrackingFollow {
             velocity: direction,
             target_velocity: direction,
-            change_in: MIN_CHANGE + rng.next_f32() * (MAX_CHANGE - MIN_CHANGE),
+            change_in,
         },
     ));
 }
@@ -120,7 +138,7 @@ fn movement(
         follow.change_in -= dt;
         if follow.change_in <= 0.0 {
             follow.target_velocity = rng.next_direction() * SPEED;
-            follow.change_in = MIN_CHANGE + rng.next_f32() * (MAX_CHANGE - MIN_CHANGE);
+            follow.change_in = rng.gen_range(MIN_CHANGE, MAX_CHANGE);
         }
 
         let alpha = (dt * STEER_RATE).min(1.0);

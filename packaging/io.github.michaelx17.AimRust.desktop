@@ -1,0 +1,17 @@
+[Desktop Entry]
+Type=Application
+Name=AimRust
+GenericName=AimRust
+Comment=Fast, modern aim trainer built with Rust and Bevy
+Exec=AimRust %F
+Icon=aim-rust
+Terminal=false
+StartupNotify=true
+StartupWMClass=io.github.michaelx17.AimRust
+Categories=Game;ActionGame;
+Keywords=Aim;Trainer;FPS;Rust;Bevy;Game;
+X-AppImage-Version=0.1.0
+X-AppImage-Name=AimRust
+X-AppImage-Comment=Fast, modern aim trainer built with Rust and Bevy
+X-AppImage-Categories=Game;ActionGame;
+X-AppImage-Icon=aim-rust

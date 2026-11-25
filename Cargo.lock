@@ -3,6 +3,18 @@
 version = 4
 
 [[package]]
+name = "AimRust"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "bevy_egui",
+ "dirs",
+ "ron",
+ "serde",
+ "toml",
+]
+
+[[package]]
 name = "ab_glyph"
 version = "0.2.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -119,18 +131,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c982642fa9e8606056828ee9a8505737230110bb1099153c79efe865c59d12ba"
 dependencies = [
  "memchr",
-]
-
-[[package]]
-name = "aim_trainer"
-version = "0.1.0"
-dependencies = [
- "bevy",
- "bevy_egui",
- "dirs",
- "ron",
- "serde",
- "toml",
 ]
 
 [[package]]
@@ -3012,6 +3012,8 @@ dependencies = [
  "num-traits",
  "png",
  "tiff",
+ "zune-core",
+ "zune-jpeg",
 ]
 
 [[package]]

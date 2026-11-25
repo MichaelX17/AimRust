@@ -62,3 +62,20 @@ Desktop.ini
 *.bak
 *.orig
 *.rej
+
+# ---------------------------------------------------------------------------
+# Distribution & local runtime output
+# ---------------------------------------------------------------------------
+/dist/
+*.AppImage
+AimRust.config/
+portable.ini
+
+# ---------------------------------------------------------------------------
+# References, prompts & local agent notes
+# ---------------------------------------------------------------------------
+/Prompt/
+/design_references/
+/task_references/
+/design_bible.md
+/MEMORY.md

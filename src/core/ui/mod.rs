@@ -5,6 +5,7 @@ use bevy_egui::{EguiContexts, EguiPlugin, EguiPrimaryContextPass, egui};
 use crate::core::config::Settings;
 use crate::core::state::AppState;
 
+pub mod crosshair_preview;
 pub mod menu;
 pub mod pause;
 pub mod results;
@@ -39,6 +40,9 @@ impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(EguiPlugin::default())
             .init_resource::<UiAccent>()
+            .init_resource::<pause::PauseUiState>()
+            .init_resource::<pause::PendingRestart>()
+            .add_systems(OnEnter(AppState::Paused), pause::reset_pause_state)
             .add_systems(
                 EguiPrimaryContextPass,
                 (
@@ -56,6 +60,7 @@ impl Plugin for UiPlugin {
             .add_systems(
                 Update,
                 (
+                    pause::handle_pending_restart.run_if(in_state(AppState::Menu)),
                     pause::esc_pause.run_if(in_state(AppState::Playing)),
                     pause::esc_resume.run_if(in_state(AppState::Paused)),
                 ),

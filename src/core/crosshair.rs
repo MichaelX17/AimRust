@@ -12,6 +12,7 @@ pub struct CrosshairPlugin;
 impl Plugin for CrosshairPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(AppState::Countdown), spawn_crosshair)
+            .add_systems(OnEnter(AppState::Settings), spawn_crosshair)
             .add_systems(Update, rebuild_crosshair)
             .add_systems(OnEnter(AppState::Results), despawn_crosshair)
             .add_systems(OnEnter(AppState::Menu), despawn_crosshair);

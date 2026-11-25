@@ -4,14 +4,14 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use crate::core::paths;
 use crate::core::round::RoundTimer;
 use crate::core::score::RoundScore;
 use crate::core::state::AppState;
 use crate::core::task_api::SelectedTask;
 
-const CONFIG_DIR: &str = "aim_trainer";
 const SCORES_FILE: &str = "scores.toml";
-const MAX_RECENT: usize = 15;
+const MAX_RECENT: usize = 28;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct RoundRecord {
@@ -62,7 +62,7 @@ impl Plugin for StoragePlugin {
 }
 
 fn scores_path() -> Option<PathBuf> {
-    dirs::config_dir().map(|dir| dir.join(CONFIG_DIR).join(SCORES_FILE))
+    paths::config_file_path(SCORES_FILE)
 }
 
 fn backup_path(path: &Path) -> PathBuf {

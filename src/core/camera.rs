@@ -3,6 +3,7 @@ use bevy::prelude::*;
 use bevy::render::view::DebandDither;
 
 use crate::core::ads::AdsState;
+use crate::core::config::Settings;
 use crate::core::input::{PlayerLook, Shot};
 use crate::core::settings::{HeadhunterAdsState, UserSettings};
 
@@ -34,6 +35,11 @@ impl Default for CameraRecoil {
 pub fn spawn_player_camera(mut commands: Commands) {
     commands.spawn((
         Camera3d::default(),
+        Projection::Perspective(PerspectiveProjection {
+            near: 0.05,
+            far: 500.0,
+            ..default()
+        }),
         Tonemapping::None,
         DebandDither::Disabled,
         Transform::from_translation(PLAYER_POS).looking_to(-Vec3::Z, Vec3::Y),
@@ -45,9 +51,11 @@ pub fn spawn_player_camera(mut commands: Commands) {
 /// Recoil system:
 /// - In hipfire (No ADS): kicks the camera pitch up on shot and smoothly returns over 0.2s.
 /// - In ADS: applies spring-back camera/scope recoil recovery (smoothly decays pitch and yaw, applying kick to view rotation).
+#[allow(clippy::too_many_arguments)]
 pub fn apply_recoil(
     time: Res<Time>,
-    settings: Res<UserSettings>,
+    user_settings: Res<UserSettings>,
+    settings: Res<Settings>,
     ads: Res<AdsState>,
     mut headhunter: ResMut<HeadhunterAdsState>,
     look: Res<PlayerLook>,
@@ -64,7 +72,10 @@ pub fn apply_recoil(
     }
 
     let in_ads = ads.progress > 0.05 || ads.is_active;
-    if has_shot && settings.recoil_enabled && !in_ads {
+    let recoil_on = settings.recoil_enabled && user_settings.recoil_enabled;
+    let shake_on = settings.camera_shake_enabled;
+
+    if has_shot && recoil_on && shake_on && !in_ads {
         recoil.kick = Vec3::new(1.8f32.to_radians(), 0.0, 0.0);
         recoil.timer.reset();
     }
@@ -79,10 +90,19 @@ pub fn apply_recoil(
         headhunter.current_recoil_pitch *= 1.0 - decay;
         headhunter.current_recoil_yaw *= 1.0 - decay;
 
+        let (yaw_offset, pitch_offset) = if recoil_on && shake_on {
+            (
+                headhunter.current_recoil_yaw.to_degrees(),
+                headhunter.current_recoil_pitch.to_degrees(),
+            )
+        } else {
+            (0.0, 0.0)
+        };
+
         let base_rot = Quat::from_euler(
             EulerRot::YXZ,
-            (look.yaw + headhunter.current_recoil_yaw.to_degrees()).to_radians(),
-            (look.pitch + headhunter.current_recoil_pitch.to_degrees()).to_radians(),
+            (look.yaw + yaw_offset).to_radians(),
+            (look.pitch + pitch_offset).to_radians(),
             0.0,
         );
         transform.rotation = base_rot;
@@ -96,7 +116,11 @@ pub fn apply_recoil(
                 look.pitch.to_radians(),
                 0.0,
             );
-            let recoil_rot = Quat::from_rotation_x(recoil.kick.x * factor);
+            let recoil_rot = if recoil_on && shake_on {
+                Quat::from_rotation_x(recoil.kick.x * factor)
+            } else {
+                Quat::IDENTITY
+            };
             transform.rotation = base_rot * recoil_rot;
         }
     }

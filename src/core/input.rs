@@ -102,7 +102,6 @@ pub fn mouse_look(
     look.pitch = (look.pitch - delta.y * deg).clamp(-89.0, 89.0);
 
     if let Some(mut transform) = cameras.iter_mut().next() {
-        transform.translation = PLAYER_POS;
         transform.rotation = Quat::from_euler(
             EulerRot::YXZ,
             look.yaw.to_radians(),

@@ -30,4 +30,4 @@ macro_rules! register_tasks {
     };
 }
 
-register_tasks!(sandbox, gridshot, sixshot, spidershot, tracking_follow, tracking_shoot, flick);
+register_tasks!(sandbox, gridshot, sixshot, spidershot, tracking_follow, tracking_shoot, flick, peek_exercise, cylinder_micro, multishot_ultimate, micro_adjust, superflicks, vct_tenz, headshot_precision);

@@ -2,9 +2,11 @@ use bevy::prelude::*;
 
 pub mod ads;
 pub mod arena;
+pub mod audio;
 pub mod camera;
 pub mod config;
 pub mod crosshair;
+pub mod discord;
 pub mod hud;
 pub mod round;
 pub mod score;
@@ -13,6 +15,7 @@ pub mod storage;
 pub mod hit;
 pub mod hit_zone;
 pub mod input;
+pub mod paths;
 pub mod state;
 pub mod task_api;
 pub mod ui;
@@ -32,6 +35,7 @@ impl Plugin for CorePlugin {
                 ui::UiPlugin,
                 ads::AdsPlugin,
                 arena::ArenaPlugin,
+                audio::AudioPlugin,
                 round::RoundPlugin,
                 input::InputPlugin,
                 crosshair::CrosshairPlugin,
@@ -39,6 +43,7 @@ impl Plugin for CorePlugin {
                 score::ScorePlugin,
                 hud::HudPlugin,
                 storage::StoragePlugin,
+                discord::DiscordPresencePlugin,
             ))
             .add_systems(Startup, (camera::spawn_player_camera, config::load_settings))
             .add_systems(

@@ -2,7 +2,8 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 
-const CONFIG_DIR: &str = "aim_trainer";
+use crate::core::paths;
+
 const CONFIG_FILE: &str = "settings.toml";
 const SAVE_DEBOUNCE_SECS: f32 = 0.5;
 
@@ -14,8 +15,11 @@ pub struct Settings {
     pub crosshair: CrosshairCfg,
     pub colors: ColorsCfg,
     pub video: VideoCfg,
+    pub audio: AudioCfg,
     pub show_gun: bool,
     pub hold_to_ads: bool,
+    pub recoil_enabled: bool,
+    pub camera_shake_enabled: bool,
 }
 
 impl Default for Settings {
@@ -26,8 +30,11 @@ impl Default for Settings {
             crosshair: CrosshairCfg::default(),
             colors: ColorsCfg::default(),
             video: VideoCfg::default(),
+            audio: AudioCfg::default(),
             show_gun: true,
             hold_to_ads: true,
+            recoil_enabled: true,
+            camera_shake_enabled: true,
         }
     }
 }
@@ -113,8 +120,25 @@ pub enum WindowMode {
     Fullscreen,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct AudioCfg {
+    pub enabled: bool,
+    /// Master SFX volume percentage (`0..=100`).
+    pub volume: u32,
+}
+
+impl Default for AudioCfg {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            volume: 80,
+        }
+    }
+}
+
 fn settings_path() -> Option<PathBuf> {
-    dirs::config_dir().map(|dir| dir.join(CONFIG_DIR).join(CONFIG_FILE))
+    paths::config_file_path(CONFIG_FILE)
 }
 
 /// Loads settings at startup: missing file -> defaults, unparsable file -> `.bak`

@@ -29,6 +29,12 @@ pub struct Target {
 #[derive(Component)]
 pub struct Expired;
 
+/// Axis-aligned wall collider that blocks hitscan raycasts.
+#[derive(Component, Clone, Copy, Debug)]
+pub struct CoverWall {
+    pub half_extents: Vec3,
+}
+
 #[derive(Message)]
 pub struct TargetHit {
     pub entity: Entity,
@@ -122,6 +128,7 @@ fn ray_hit(origin: Vec3, dir: Vec3, center: Vec3, shape: &TargetShape) -> Option
 fn update_aiming(
     camera: Query<&GlobalTransform, With<PlayerCamera>>,
     targets: Query<(Entity, &Target, &GlobalTransform)>,
+    walls: Query<(&CoverWall, &GlobalTransform)>,
     mut aiming: ResMut<AimingAt>,
 ) {
     let Ok(camera) = camera.single() else {
@@ -130,10 +137,22 @@ fn update_aiming(
     let origin = camera.translation();
     let dir = *camera.forward();
 
+    // Find nearest cover wall intersection to block targets behind cover
+    let mut closest_wall_dist = f32::INFINITY;
+    for (wall, transform) in &walls {
+        let center = transform.translation();
+        if let Some(dist) = ray_aabb(origin, dir, center, wall.half_extents)
+            && dist < closest_wall_dist
+        {
+            closest_wall_dist = dist;
+        }
+    }
+
     let mut best: Option<(f32, Entity)> = None;
     for (entity, target, transform) in &targets {
         let center = transform.translation();
         if let Some(distance) = ray_hit(origin, dir, center, &target.shape)
+            && distance < closest_wall_dist
             && best.is_none_or(|(best_distance, _)| distance < best_distance)
         {
             best = Some((distance, entity));
@@ -155,6 +174,7 @@ fn consume_shots(
     parents: Query<&ChildOf>,
     mut score: ResMut<RoundScore>,
     settings: Res<UserSettings>,
+    selected: Res<crate::core::task_api::SelectedTask>,
     mut timer: ResMut<RoundTimer>,
     mut next_state: ResMut<NextState<AppState>>,
 ) {
@@ -173,7 +193,10 @@ fn consume_shots(
                         .map(|rt| rt.elapsed_ms)
                 });
 
-            if let Some(zone) = hit_zone {
+            let is_peek = selected.0 == "peek_exercise";
+            if let Some(zone) = hit_zone
+                && !is_peek
+            {
                 task_api::on_target_hit(&mut score, zone, reaction_ms.unwrap_or(0.0));
             }
 
@@ -184,7 +207,7 @@ fn consume_shots(
             });
 
             // Despawn reaction target if it has a hit zone (standard targets are handled by task respawn systems)
-            if hit_zone.is_some() {
+            if hit_zone.is_some() && !is_peek {
                 let root = parents
                     .get(entity)
                     .map(|p| p.parent())

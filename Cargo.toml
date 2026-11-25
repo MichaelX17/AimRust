@@ -1,5 +1,5 @@
 [package]
-name = "aim_trainer"
+name = "AimRust"
 version = "0.1.0"
 edition = "2024"
 
@@ -24,6 +24,7 @@ bevy = { version = "=0.20.1", default-features = false, features = [
     "bevy_ui_render",
     "default_font",
     "png",
+    "jpeg",
     "hdr",
     "ktx2",
     "tonemapping_luts",

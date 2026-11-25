@@ -58,7 +58,12 @@ fn click_scoring(
     selected: Res<SelectedTask>,
     mut score: ResMut<RoundScore>,
 ) {
-    if scoring_mode(&registry, &selected) != ScoringMode::Click {
+    if scoring_mode(&registry, &selected) != ScoringMode::Click
+        || selected.0 == "peek_exercise"
+        || selected.0 == "cylinder_micro"
+        || selected.0 == "multishot_ultimate"
+        || selected.0 == "micro_adjust"
+    {
         return;
     }
 

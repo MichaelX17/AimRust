@@ -127,6 +127,7 @@ fn apply_ads_camera(
 fn apply_ads_gun(
     time: Res<Time>,
     ads: Res<AdsState>,
+    settings: Option<Res<Settings>>,
     mut headhunter: ResMut<crate::core::settings::HeadhunterAdsState>,
     mut guns: Query<&mut Transform, With<Gun>>,
     mut was_active: Local<bool>,
@@ -141,7 +142,9 @@ fn apply_ads_gun(
         headhunter.gun_kick_timer.tick(time.delta());
     }
 
-    let k = if headhunter.is_ads && !headhunter.gun_kick_timer.is_finished() {
+    let recoil_enabled = settings.is_none_or(|s| s.recoil_enabled);
+
+    let k = if recoil_enabled && headhunter.is_ads && !headhunter.gun_kick_timer.is_finished() {
         (1.0 - headhunter.gun_kick_timer.fraction()).powi(2)
     } else {
         0.0

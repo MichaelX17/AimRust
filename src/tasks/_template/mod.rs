@@ -8,6 +8,9 @@ use crate::core::hit_zone::{HitZone, ReactionTimer, TargetHitbox};
 use crate::core::task_api::{ScoringMode, TaskInfo};
 use crate::props::targets::TargetMaterial;
 
+#[allow(unused_imports)]
+pub use crate::props::targets::spawn_humanoid_target;
+
 pub const INFO: TaskInfo = TaskInfo {
     id: "template",
     name: "Template",
