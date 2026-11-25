@@ -23,7 +23,7 @@ AppDir/
         ├── icons/hicolor/512x512/apps/
         │   └── aim-rust.png
         └── metainfo/
-            └── io.github.michaelx17.AimRust.appdata.xml
+            └── io.github.michaelx17.AimRust.metainfo.xml
 ```
 
 ## Files

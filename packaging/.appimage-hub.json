@@ -12,7 +12,7 @@
     "github_repo": "https://github.com/MichaelX17/AimRust"
   },
   "current_version": "0.1.0",
-  "asset_preference": "AimRust-x86_64.AppImage",
-  "file": "AimRust-x86_64.AppImage",
+  "asset_preference": "AimRust-0.1.0-x86_64.AppImage",
+  "file": "AimRust-0.1.0-x86_64.AppImage",
   "icon": "aim-rust.png"
 }

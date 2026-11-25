@@ -61,10 +61,12 @@ if [ -f "$ICON_SRC" ]; then
   ln -sf aim-rust.png "$APPDIR/.DirIcon"
 fi
 
-install -m 644 "$ROOT/packaging/io.github.michaelx17.AimRust.desktop" "$APPDIR/io.github.michaelx17.AimRust.desktop"
-install -m 644 "$ROOT/packaging/io.github.michaelx17.AimRust.desktop" "$APPDIR/usr/share/applications/io.github.michaelx17.AimRust.desktop"
+sed "s/^X-AppImage-Version=.*/X-AppImage-Version=${VERSION}/" \
+  "$ROOT/packaging/io.github.michaelx17.AimRust.desktop" > "$APPDIR/io.github.michaelx17.AimRust.desktop"
+chmod 644 "$APPDIR/io.github.michaelx17.AimRust.desktop"
+install -m 644 "$APPDIR/io.github.michaelx17.AimRust.desktop" "$APPDIR/usr/share/applications/io.github.michaelx17.AimRust.desktop"
 install -m 644 "$ROOT/packaging/io.github.michaelx17.AimRust.metainfo.xml" \
-  "$APPDIR/usr/share/metainfo/io.github.michaelx17.AimRust.appdata.xml"
+  "$APPDIR/usr/share/metainfo/io.github.michaelx17.AimRust.metainfo.xml"
 if [ -f "$ROOT/packaging/.appimage-hub.json" ]; then
   install -m 644 "$ROOT/packaging/.appimage-hub.json" "$APPDIR/.appimage-hub.json"
 fi
